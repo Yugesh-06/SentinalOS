@@ -721,6 +721,7 @@ const ViewValidation = ({ taskData, onFix }) => {
         </div>
      // Wizard Step 4 (NEW): Structured Defaults Generation
 const ViewDeclarationGeneration = ({ taskData }) => {
+  const [showFullDoc, setShowFullDoc] = React.useState(false);
 
   const handleDownload = () => {
     if (!taskData || !taskData.generated_form) return;
@@ -736,7 +737,7 @@ const ViewDeclarationGeneration = ({ taskData }) => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-4xl justify-center">
+    <div className="flex flex-col h-full w-full max-w-4xl justify-center relative">
       <div className="text-center mb-10">
         <span className="font-mono text-[10px] text-teal-400 bg-teal-950/50 px-3 py-1 rounded-full uppercase tracking-widest border border-teal-900/80 mb-4 inline-block">Step 4: Output Synthesis</span>
         <h2 className="text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-500 drop-shadow-[0_0_10px_rgba(45,212,191,0.3)] uppercase">Structured Customs Documents Generated</h2>
@@ -745,27 +746,33 @@ const ViewDeclarationGeneration = ({ taskData }) => {
 
       <div className="flex flex-col md:flex-row gap-8 h-[380px]">
         {/* Mock JSON Response Panel */}
-        <div className="flex-1 bg-[#0d1117] rounded-2xl border border-slate-700/80 p-6 flex flex-col shadow-2xl relative overflow-hidden">
+        <div className="flex-1 bg-[#0d1117] rounded-2xl border border-slate-700/80 p-6 flex flex-col shadow-2xl relative overflow-hidden group">
           <div className="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
             <span className="font-mono text-xs text-slate-500 uppercase tracking-widest">synthetic_document_output.txt</span>
-            <Terminal className="w-4 h-4 text-teal-500" />
+            <button onClick={() => setShowFullDoc(true)} className="flex items-center space-x-2 text-teal-500 bg-teal-500/10 hover:bg-teal-500/20 px-2 py-1 rounded text-xs transition-colors"><Maximize className="w-3 h-3" /><span>View Toggle</span></button>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar font-mono text-[10px] sm:text-xs text-teal-300 whitespace-pre-wrap leading-relaxed">
-            {taskData?.generated_form || "Awaiting Terminal Protocol..."}
+          <div className="flex-1 overflow-y-auto custom-scrollbar font-mono text-[10px] sm:text-xs text-teal-300 whitespace-pre-wrap leading-relaxed relative z-10">
+            {taskData?.generated_form || "Awaiting Terminal Protocol...\n\n(Hint: You must upload a FRESH document for the new AI agent to generate the form. Old jobs do not have this logic retroactively applied!)"}
           </div>
         </div>
 
         {/* Action Panel */}
         <div className="flex-1 flex flex-col gap-4">
-          <div className="flex-1 bg-slate-900/80 rounded-2xl border border-slate-800 p-8 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden group hover:border-teal-500/50 transition-colors cursor-pointer" onClick={handleDownload}>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-full blur-2xl group-hover:bg-teal-500/20 transition-colors"></div>
-            <FileText className="w-16 h-16 text-teal-400 mb-4 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)] group-hover:scale-110 transition-transform" />
+          <div className="flex-1 bg-slate-900/80 rounded-2xl border border-slate-800 p-8 flex flex-col items-center justify-center text-center shadow-inner relative overflow-hidden transition-colors">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-full blur-2xl pointer-events-none"></div>
+            <FileText className="w-16 h-16 text-teal-400 mb-4 drop-shadow-[0_0_10px_rgba(45,212,191,0.5)]" />
             <h3 className="text-xl font-bold text-slate-200">Customs Form Document</h3>
             <p className="text-slate-400 text-xs font-mono mt-2 lowercase">Ready for Signature Authorization</p>
-            <button className="mt-6 flex items-center space-x-2 bg-teal-500/20 text-teal-400 border border-teal-500/50 px-6 py-2 rounded-full font-mono text-xs uppercase tracking-widest hover:bg-teal-500 hover:text-slate-950 transition-colors pointer-events-none">
-              <Download className="w-4 h-4" />
-              <span>Download</span>
-            </button>
+            <div className="mt-6 flex gap-2">
+                <button onClick={() => setShowFullDoc(true)} className="flex items-center space-x-2 bg-slate-800 text-slate-300 border border-slate-700 px-4 py-2 rounded-lg font-mono text-xs tracking-widest hover:bg-slate-700 transition-colors shadow-lg hover:scale-105">
+                  <Maximize className="w-4 h-4" />
+                  <span>Toggle View</span>
+                </button>
+                <button onClick={handleDownload} className="flex items-center space-x-2 bg-teal-500/20 text-teal-400 border border-teal-500/50 px-4 py-2 rounded-lg font-mono text-xs tracking-widest hover:bg-teal-500 hover:text-slate-950 transition-colors shadow-lg hover:scale-105">
+                  <Download className="w-4 h-4" />
+                  <span>Download</span>
+                </button>
+            </div>
           </div>
           
           <button className="bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-teal-500 text-slate-300 p-4 rounded-xl font-mono text-xs uppercase tracking-widest flex items-center justify-center space-x-3 transition-colors shadow-lg">
@@ -774,6 +781,31 @@ const ViewDeclarationGeneration = ({ taskData }) => {
           </button>
         </div>
       </div>
+      
+      {/* Full Document Modal overlay */}
+      <AnimatePresence>
+        {showFullDoc && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8">
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-950/90 backdrop-blur-md" onClick={() => setShowFullDoc(false)}/>
+               <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -20 }} className="z-10 w-full max-w-4xl h-[85vh] bg-[#0d1117] border border-teal-900/60 shadow-[0_0_50px_rgba(45,212,191,0.15)] rounded-2xl flex flex-col overflow-hidden">
+                    <div className="h-14 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6">
+                        <div className="flex items-center space-x-3 text-teal-400 font-mono text-sm tracking-widest"><FileText className="w-4 h-4" /><span>GENERATED_ADDENDUM.TXT</span></div>
+                        <button onClick={() => setShowFullDoc(false)} className="text-slate-500 hover:text-white transition-colors bg-slate-800 rounded p-1"><FileX className="w-5 h-5"/></button>
+                    </div>
+                    <div className="flex-1 p-8 overflow-y-auto custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative">
+                        <div className="absolute inset-0 bg-[#0d1117]/95"></div>
+                        <div className="relative z-10 max-w-3xl mx-auto bg-slate-900/40 p-8 rounded border border-slate-800 text-slate-300 font-mono text-sm leading-[1.8] whitespace-pre-wrap shadow-2xl">
+                            {taskData?.generated_form || "No document loaded. Run pipeline."}
+                        </div>
+                    </div>
+                    <div className="h-16 border-t border-slate-800 bg-slate-900 flex items-center justify-end px-6 space-x-4">
+                        <button onClick={() => setShowFullDoc(false)} className="text-slate-400 hover:text-white font-mono text-xs tracking-widest uppercase transition-colors px-4 py-2">Close Fullscreen</button>
+                        <button onClick={handleDownload} className="bg-teal-500/20 border border-teal-500/50 text-teal-400 hover:bg-teal-500 hover:text-slate-950 px-6 py-2 rounded-lg font-mono text-xs tracking-widest uppercase transition-all shadow-lg flex items-center space-x-2"><Download className="w-4 h-4"/><span>Save to Disk</span></button>
+                    </div>
+               </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
