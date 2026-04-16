@@ -719,7 +719,12 @@ const ViewValidation = ({ taskData, onFix }) => {
             <CheckCircle className="w-4 h-4" /><span>Proceed to Declaration</span>
           </button>
         </div>
-     // Wizard Step 4 (NEW): Structured Defaults Generation
+      )}
+    </div>
+  );
+};
+
+// Wizard Step 4 (NEW): Structured Defaults Generation
 const ViewDeclarationGeneration = ({ taskData }) => {
   const [showFullDoc, setShowFullDoc] = React.useState(false);
 
