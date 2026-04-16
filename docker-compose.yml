@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: sentinel_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: securepassword123
+      POSTGRES_DB: sentinel_os
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d sentinel_os"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: sentinel_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - sentinel_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. FastAPI Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sentinel_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://admin:securepassword123@db:5432/sentinel_os
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # 4. Celery Worker 1 (Parallelisation)
+  worker_1:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sentinel_worker_1
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://admin:securepassword123@db:5432/sentinel_os
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+    command: celery -A app.tasks.celery_app worker -n worker1@%h --loglevel=info
+
+  # 5. Celery Worker 2 (Parallelisation Requirement)
+  worker_2:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sentinel_worker_2
+    volumes:
+      - ./backend:/app
+    env_file:
+      - ./backend/.env
+    environment:
+      - DATABASE_URL=postgresql://admin:securepassword123@db:5432/sentinel_os
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - sentinel_net
+    command: celery -A app.tasks.celery_app worker -n worker2@%h --loglevel=info
+
+  # 6. React Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: sentinel_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - sentinel_net
+
+volumes:
+  postgres_data:
+
+networks:
+  sentinel_net:
+    driver: bridge
