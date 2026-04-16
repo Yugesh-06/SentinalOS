@@ -43,3 +43,15 @@ This project runs entirely inside a single containerized ecosystem. Ensure Docke
 
 
 ![image alt](https://github.com/Yugesh-06/SentinalOS/blob/34a93f7b2040a56cc137dd1ab93836634762295c/Screenshot%202026-04-16%20171223.png)
+
+![image alt]()
+
+![image alt]()
+
+![image alt]()
+
+![image alt]()
+
+![image alt]()
+
+![image alt]()
