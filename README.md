@@ -39,3 +39,7 @@ This project runs entirely inside a single containerized ecosystem. Ensure Docke
 - `backend/app/main.py`: Core Router / View Layer.
 - `backend/app/core/database.py`: Singleton Data Model connection and strict PII Encryption ruleset.
 - `backend/app/tasks.py`: Controller / Service layer orchestrating atomic logic via Celery Workers.
+
+
+
+![image alt](https://github.com/Yugesh-06/SentinalOS/blob/34a93f7b2040a56cc137dd1ab93836634762295c/Screenshot%202026-04-16%20171223.png)
